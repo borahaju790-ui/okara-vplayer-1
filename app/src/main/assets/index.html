@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head><script type="module" src="https://cdn.apper.io/apper-dev-script/index.umd.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Okara VPlayer local video player. No cloud account or video uploads.">
+  <title>Okara VPlayer</title>
+  <style>
+    :root { color-scheme: light; --background: oklch(0.975 0.012 145); --foreground: oklch(0.22 0.025 155); --card: oklch(1 0 0); --primary: oklch(0.62 0.17 145); --primary-foreground: oklch(0.15 0.025 150); --muted-foreground: oklch(0.49 0.025 155); --accent: oklch(0.955 0.012 145); --border: oklch(0.89 0.018 150); --ring: oklch(0.62 0.17 145); }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--foreground); font-family: 'Barlow', sans-serif; font-size: 14px; line-height: 1.6; }
+    main { max-width: 1200px; margin: auto; padding: 24px; }
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; line-height: 1.2; margin: 4px 0; }
+    h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; margin: 0; }
+    p { margin: 8px 0; }
+    .caption { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-foreground); }
+    .secondary { color: var(--muted-foreground); }
+    .grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
+    .panel { min-width: 0; border: 1px solid var(--border); border-radius: 16px; background: var(--card); overflow: hidden; }
+    .padding { padding: 16px; }
+    .screen { aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--foreground); color: var(--background); }
+    .screen video { width: 100%; height: 100%; max-height: 65vh; }
+    .empty { text-align: center; padding: 16px; }
+    button, input { font: inherit; }
+    button { border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; cursor: pointer; color: var(--foreground); background: var(--card); transition: background .15s, transform .15s; }
+    button:hover { background: var(--accent); }
+    button:active { transform: scale(.98); }
+    button:disabled { opacity: .5; pointer-events: none; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+    .primary { background: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+    .primary:hover { filter: brightness(.95); background: var(--primary); }
+    input[type=search] { width: 100%; margin: 16px 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--foreground); }
+    .list { max-height: 440px; overflow-y: auto; display: grid; gap: 8px; }
+    .row { width: 100%; text-align: left; padding: 10px 16px; min-width: 0; }
+    .row[aria-pressed=true] { background: var(--accent); border-color: var(--primary); }
+    .name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .size { display: block; font-size: 12px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+    .details { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .details > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .details > button { flex-shrink: 0; }
+    .info { margin-top: 24px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } main { padding: 16px; } }
+    @media (prefers-reduced-motion: reduce) { button { transition: none; } button:active { transform: none; } }
+  </style>
+
+            <meta name="description" content="Okara VPlayer" />
+            <meta property="og:title" content="Okara VPlayer" />
+            <meta property="og:type" content="App" />
+            <meta name="twitter:title" content="Okara VPlayer" />
+        <meta property="og:url" content="https://preview--okara-vplayer-grid.apper.so" />
+            <meta property="og:image" content="https://platform.apper.io/v1/thumbnails/94661c66164047bb998277dffc329637.png"/>            
+            <meta name="twitter:image" content="https://platform.apper.io/v1/thumbnails/94661c66164047bb998277dffc329637.png"/>
+            <meta name="twitter:card" content="summary_large_image">
+        </head>
+<body>
+  <main>
+    <header>
+      <div><div class="caption">OKARA VPLAYER · LOCAL VIDEO PLAYER</div><h1>My video library</h1><p class="secondary">Open videos directly from your phone or SD card.</p></div>
+      <button id="add" class="primary" type="button">＋ Add videos</button>
+      <input id="files" type="file" accept="video/*,.mkv,.avi,.3gp" multiple hidden>
+    </header>
+    <div class="grid">
+      <section class="panel" aria-label="Video player">
+        <div class="screen">
+          <video id="player" controls playsinline preload="metadata" hidden>Your browser cannot play this video format.</video>
+          <div id="welcome" class="empty"><h2>Your player is ready</h2><p>Select a video from your phone or SD card to start watching.</p></div>
+        </div>
+        <div class="padding details"><div><h2 id="title">Nothing playing yet</h2><p id="meta" class="secondary">Choose a video to see its details</p></div><button id="remove" type="button" disabled>Remove from list</button></div>
+        <div id="stats" class="padding secondary">0 videos selected · 0 B in this session</div>
+      </section>
+      <section class="panel padding" aria-labelledby="library-title">
+        <h2 id="library-title">My videos</h2>
+        <input id="search" type="search" placeholder="Search video names" aria-label="Search video names">
+        <div id="list" class="list"></div>
+      </section>
+    </div>
+    <section class="info"><strong>Important: this version does not copy or upload your videos.</strong><p>Playback works without internet. Choose files through your device file picker, including an SD card if available. The selected list lasts only while this page is open. After closing or refreshing it, choose the files again. Supported formats depend on your browser and device.</p></section>
+    <p id="message" class="secondary" role="status" aria-live="polite">Choose videos from your phone or SD card to begin.</p>
+  </main>
+  <script>
+    const element = (id) => document.getElementById(id);
+    const player = element('player');
+    const files = element('files');
+    let videos = [];
+    let active = null;
+    function formatBytes(bytes) {
+      if (!bytes) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+      return (bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0) + ' ' + units[index];
+    }
+    function renderList() {
+      const list = element('list');
+      list.replaceChildren();
+      const query = element('search').value.trim().toLowerCase();
+      const matches = videos.filter((video) => video.file.name.toLowerCase().includes(query));
+      for (const video of matches) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'row';
+        button.setAttribute('aria-pressed', String(active === video));
+        button.title = video.file.name;
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = video.file.name;
+        const size = document.createElement('span');
+        size.className = 'size';
+        size.textContent = formatBytes(video.file.size);
+        button.append(name, size);
+        button.addEventListener('click', () => select(video));
+        list.append(button);
+      }
+      if (!matches.length) list.textContent = videos.length ? 'No video matches that search.' : 'Your list is empty. Tap “Add videos” to choose files.';
+      element('stats').textContent = videos.length + ' videos selected · ' + formatBytes(videos.reduce((sum, video) => sum + video.file.size, 0)) + ' in this session';
+    }
+    function select(video) {
+      player.pause();
+      active = video;
+      if (video) player.src = video.url;
+      else player.removeAttribute('src');
+      player.load();
+      player.hidden = !video;
+      element('welcome').hidden = !!video;
+      element('remove').disabled = !video;
+      element('title').textContent = video ? video.file.name : 'Nothing playing yet';
+      element('meta').textContent = video ? formatBytes(video.file.size) + ' · ' + (video.file.type || 'video/*') : 'Choose a video to see its details';
+      renderList();
+    }
+    element('add').addEventListener('click', () => files.click());
+    files.addEventListener('change', () => {
+      const chosen = Array.from(files.files || []).filter((file) => file.type.startsWith('video/') || /\.(mp4|m4v|webm|mov|3gp|mkv|avi)$/i.test(file.name));
+      const added = chosen.map((file) => ({ file, url: URL.createObjectURL(file) }));
+      videos.push(...added);
+      if (!active && videos.length) select(videos[0]);
+      else renderList();
+      element('message').textContent = added.length ? added.length + ' videos added for this session.' : 'No supported video was selected. Choose a video file and try again.';
+      files.value = '';
+    });
+    element('search').addEventListener('input', renderList);
+    element('remove').addEventListener('click', () => {
+      if (!active) return;
+      const removed = active;
+      videos = videos.filter((video) => video !== removed);
+      select(videos[0] || null);
+      URL.revokeObjectURL(removed.url);
+      element('message').textContent = 'Video removed from the list. The original file is unchanged.';
+    });
+    player.addEventListener('error', () => { element('message').textContent = 'This video could not be played. Try another format supported by your browser.'; });
+    window.addEventListener('pagehide', (event) => {
+      if (!event.persisted) videos.forEach((video) => URL.revokeObjectURL(video.url));
+    });
+    renderList();
+  </script>
+
+                        
+        <script>
+            (function() {
+                var apperCloneData = {"uniqueId":"94661c66164047bb998277dffc329637","isBackendConnected":false,"visibility":"Public","label":"Okara VPlayer","name":"okara-vplayer-grid","appVersion":3,"isMcp":true,"isProduction":true};
+                var attempts = 0;
+
+                function tryStart() {
+                    attempts++;
+                    var anchor = document.getElementById('apper-made-with-anchor');
+
+                    if (window.ApperCloneApp && anchor) {
+                        window.ApperCloneApp.start(apperCloneData);
+                    } else if (attempts < 60) {
+                        setTimeout(tryStart, 500);
+                    }
+                }
+
+                if (window.top === window.self) {
+                    tryStart();
+                }
+            })();
+        </script>
+    
+                        <script type="module" src="https://cdn.apper.io/apper-dev-script/branding.js"></script>
+                            
+        <script src="https://unpkg.com/source-map@0.7.3/dist/source-map.js"></script>
+        <script>
+            sourceMap.SourceMapConsumer.initialize({
+                "lib/mappings.wasm": "https://unpkg.com/source-map@0.7.3/lib/mappings.wasm"
+            });
+        </script>        
+    <script src="https://cdn.apper.io/apper-dev-script/ui-error.umd.js"></script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"40b83ed7e7814686a3a4e586f0c0ce51","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
